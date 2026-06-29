@@ -1,0 +1,44 @@
+name: Build Android APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+
+    - name: Install Cordova (App Packer)
+      run: npm install -g cordova
+
+    - name: Create Android Project
+      run: |
+        cordova create myApp com.patalix.dialer PatalixDialer
+        cd myApp
+        cordova platform add android --no-telemetry
+        
+    - name: Copy HTML Code to App
+      run: |
+        rm -rf myApp/www/*
+        cp index.html myApp/www/
+        
+    - name: Setup Java JDK 11
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '11'
+
+    - name: Build APK
+      run: |
+        cd myApp
+        cordova build android --debug
+
+    - name: Upload Finished APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Patalix-Dialer-APK
+        path: myApp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
